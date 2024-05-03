@@ -17,6 +17,9 @@ from bilix import ffmpeg
 
 from danmakuC.bilibili import proto2ass
 
+def format_timestamp_to_date(timestamp):
+    date = datetime.utcfromtimestamp(timestamp)
+    return date.strftime('%Y-%m-%d')
 
 class DownloaderBilibili(BaseDownloaderPart):
     cookie_domain = "bilibili.com"  # for load cookies quickly
@@ -335,6 +338,7 @@ class DownloaderBilibili(BaseDownloaderPart):
                     video_info = await api.get_video_info(self.client, url)
                 except (APIResourceError, APIUnsupportedError) as e:
                     return self.logger.warning(e)
+            pubdate = format_timestamp_to_date(video_info.pubdate)
             p_name = legal_title(video_info.pages[video_info.p].p_name)
             task_name = legal_title(video_info.title, p_name)
             # if title is too long, use p_name as base_name
@@ -353,15 +357,15 @@ class DownloaderBilibili(BaseDownloaderPart):
                     tmp: List[Tuple[api.Media, Path]] = []
                     # 1. only video
                     if not audio and not only_audio:
-                        tmp.append((video, path / f'{media_name}.mp4'))
+                        tmp.append((video, path / f'{pubdate}-{media_name}.mp4'))
                     # 2. video and audio
                     elif audio and not only_audio:
-                        exists, media_path = path_check(path / f'{media_name}.mp4')
+                        exists, media_path = path_check(path / f'{pubdate}-{media_name}.mp4')
                         if exists:
                             self.logger.info(f'[green]已存在[/green] {media_path.name}')
                         else:
-                            tmp.append((video, path / f'{media_name}-v'))
-                            tmp.append((audio, path / f'{media_name}-a'))
+                            tmp.append((video, path / f'{pubdate}-{media_name}-v'))
+                            tmp.append((audio, path / f'{pubdate}-{media_name}-a'))
                             # task need to be merged
                             await self.progress.update(task_id=task_id, upper=ffmpeg.combine)
                     # 3. only audio

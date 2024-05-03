@@ -344,6 +344,7 @@ class VideoInfo(BaseModel):
     other: Optional[List[Media]] = None  # durl resource: flv, mp4.
     desc: Optional[str] = None
     tags: Optional[List[str]] = None
+    pubdate: Optional[int] = None
 
 
 def _parse_bv_html(url, html: str) -> VideoInfo:
@@ -363,6 +364,7 @@ def _parse_bv_html(url, html: str) -> VideoInfo:
     p = int(p) - 1
     title = legal_title(init_info['videoData']['title'])
     base_url = url.split('?')[0]
+    pubdate = init_info['videoData']['pubdate']
     for idx, i in enumerate(init_info['videoData']['pages']):
         p_url = f"{base_url}?p={idx + 1}"
         p_name = f"P{idx + 1}-{i['part']}" if len(init_info['videoData']['pages']) > 1 else ''
@@ -388,7 +390,7 @@ def _parse_bv_html(url, html: str) -> VideoInfo:
     # construct data
     video_info = VideoInfo(title=title, aid=aid, cid=cid, status=status,
                            p=p, pages=pages, img_url=img_url, bvid=bvid, dash=dash, other=other,
-                           desc=desc, tags=tags)
+                           desc=desc, tags=tags, pubdate=pubdate)
     return video_info
 
 
